@@ -1,4 +1,4 @@
-package org.danielholmes.gaeq
+package org.danielholmes.gaeq.genes
 
 case class Number(value: Int) extends Gene {
   require(value >= 0 && value <= 9)

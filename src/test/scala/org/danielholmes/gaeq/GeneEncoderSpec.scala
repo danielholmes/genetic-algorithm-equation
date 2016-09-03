@@ -1,5 +1,6 @@
 package org.danielholmes.gaeq
 
+import org.danielholmes.gaeq.genes._
 import org.scalatest._
 
 class GeneEncoderSpec extends FlatSpec with Matchers {
@@ -29,12 +30,18 @@ class GeneEncoderSpec extends FlatSpec with Matchers {
     encoder.decode("") should be (empty)
   }
 
-  it should "throw exception when invalid - 2 numbers" in {
-    encoder.decode("00000001") should be (empty)
+  it should "ignore invalid tokens as per tutorial example" in {
+    // 0 2 + n/a - 7 2
+    // 0 + 7
+    encoder.decode("0000001010101110101101110010") should contain (Plus(Number(0), Number(7)))
   }
 
-  it should "throw exception when invalid - unclosed operator 1 +" in {
-    encoder.decode("00011010") should be (empty)
+  it should "ignore second number when invalid sequence of 2 numbers" in {
+    encoder.decode("00000001") should contain (Number(0))
+  }
+
+  it should "ignore operator when invalid - unclosed operator 1 +" in {
+    encoder.decode("00011010") should contain (Number(1))
   }
 
   it should "return + for 1010" in {
@@ -53,8 +60,8 @@ class GeneEncoderSpec extends FlatSpec with Matchers {
     encoder.decode("000011010000") should contain (Divide(Number(0), Number(0)))
   }
 
-  it should "return correct order of operations for multiply 2 + (0 * 1)" in {
-    encoder.decode("00101010000011000001") should contain (Plus(Number(2), Multiply(Number(0), Number(1))))
+  it should "return simple order of operations for multiply (2 + 0) * 1" in {
+    encoder.decode("00101010000011000001") should contain (Multiply(Plus(Number(2), Number(0)), Number(1)))
   }
 
   it should "return correct order of operations for multiply (2 * 0) + 1" in {
@@ -78,26 +85,23 @@ class GeneEncoderSpec extends FlatSpec with Matchers {
       ).mkString
     )
     val expected =
-      Subtract(
-        Plus(
-          Number(1),
-          Multiply(
-            Number(2),
-            Number(3)
-          )
-        ),
-        Divide(
-          Multiply(
-            Number(4),
-            Number(5)
+      Divide(
+        Multiply(
+          Subtract(
+            Multiply(
+              Plus(
+                Number(1),
+                Number(2)
+              ),
+              Number(3)
+            ),
+            Number(4)
           ),
-          Number(6)
-        )
+          Number(5)
+        ),
+        Number(6)
       )
-    // Atm constructs equation differently but still correct result
-    //println(s"$result vs $expected")
-    //println(s"${result.toDouble} vs ${expected.toDouble}")
-    //result should be (expected)
+    result should contain (expected)
     result.get.toDouble should be (expected.toDouble)
   }
 }

@@ -1,55 +1,78 @@
 package org.danielholmes.gaeq
 
+import org.danielholmes.gaeq.genes._
+
 import scala.annotation.tailrec
 
+// Order of operations is just left to right
+// Ignores invalid genes
 class GeneEncoder {
   import GeneEncoder._
 
-  def decode(value: String): Option[Gene] = {
-    Some(value)
+  // TODO: Chromosome type - String of / 4 tokens
+  def decode(chromosome: String): Option[Gene] = {
+    Some(chromosome)
       .filter(_.nonEmpty)
       .filter(_.length % GENE_LENGTH == 0)
       .map(_.grouped(GENE_LENGTH).toList)
-      .filter(_.length % 2 == 1)
-      .filter(isValid(List.empty, _))
-      .map(findLowestPriority(Seq.empty, _))
+      .map(normaliseTokens)
+      .filter(_.nonEmpty)
+      .map(decode)
+  }
+
+  private def normaliseTokens(tokens: Seq[String]): Seq[String] = {
+    normaliseWithNumberToken(Seq.empty, tokens)
   }
 
   @tailrec
-  private def isValid(current: List[String], tokens: List[String]): Boolean = {
+  private def normaliseWithNumberToken(current: Seq[String], tokens: Seq[String]): Seq[String] = {
     if (tokens.isEmpty) {
-      true
-    } else if (current.isEmpty || OPERATOR_TOKENS.contains(current.last)) {
-      NUMBER_TOKENS.contains(tokens.head) && isValid(current :+ tokens.head, tokens.tail)
+      current
     } else {
-      OPERATOR_TOKENS.contains(tokens.head) && isValid(current :+ tokens.head, tokens.tail)
-    }
-  }
-
-  // @tailrec
-  private def findLowestPriority(current: Seq[String], tokens: Seq[String]): Gene = {
-    if (current.isEmpty && tokens.size == 1) {
-      tokenToNumber(tokens.head)
-    } else if (tokens.isEmpty) {
-      findHighestPriority(Seq.empty, current)
-    } else {
-      tokens.head match {
-        case PLUS_TOKEN => Plus(findLowestPriority(Seq.empty, current), findLowestPriority(Seq.empty, tokens.tail))
-        case SUBTRACT_TOKEN => Subtract(findLowestPriority(Seq.empty, current), findLowestPriority(Seq.empty, tokens.tail))
-        case _ => findLowestPriority(current :+ tokens.head, tokens.tail)
+      if (NUMBER_TOKENS.contains(tokens.head)) {
+        normaliseWithOperatorToken(current :+ tokens.head, tokens.tail)
+      } else {
+        normaliseWithNumberToken(current, tokens.tail)
       }
     }
   }
-  private def findHighestPriority(current: Seq[String], tokens: Seq[String]): Gene = {
-    if (current.isEmpty && tokens.size == 1) {
-      tokenToNumber(tokens.head)
-    } else if (tokens.isEmpty) {
-      throw new RuntimeException(s"Invalid state $current $tokens")
+
+  @tailrec
+  private def normaliseWithOperatorToken(current: Seq[String], tokens: Seq[String]): Seq[String] = {
+    if (tokens.isEmpty) {
+      current
+    } else {
+      if (OPERATOR_TOKENS.contains(tokens.head)) {
+        val next = normaliseTokens(tokens.tail)
+        if (next.isEmpty) {
+          current
+        } else {
+          (current :+ tokens.head) ++ next
+        }
+      } else {
+        normaliseWithOperatorToken(current, tokens.tail)
+      }
+    }
+  }
+
+  private def decode(tokens: Seq[String]): Gene = {
+    decode(
+      tokenToNumber(tokens.head),
+      tokens.tail
+    )
+  }
+
+  @tailrec
+  private def decode(current: Gene, tokens: Seq[String]): Gene = {
+    if (tokens.isEmpty) {
+      current
     } else {
       tokens.head match {
-        case MULTIPLY_TOKEN => Multiply(findHighestPriority(Seq.empty, current), findHighestPriority(Seq.empty, tokens.tail))
-        case DIVIDE_TOKEN => Divide(findHighestPriority(Seq.empty, current), findHighestPriority(Seq.empty, tokens.tail))
-        case _ => findHighestPriority(current :+ tokens.head, tokens.tail)
+        case PLUS_TOKEN => decode(Plus(current, tokenToNumber(tokens.tail.head)), tokens.tail.tail)
+        case SUBTRACT_TOKEN => decode(Subtract(current, tokenToNumber(tokens.tail.head)), tokens.tail.tail)
+        case MULTIPLY_TOKEN => decode(Multiply(current, tokenToNumber(tokens.tail.head)), tokens.tail.tail)
+        case DIVIDE_TOKEN => decode(Divide(current, tokenToNumber(tokens.tail.head)), tokens.tail.tail)
+        case _ => throw new RuntimeException("Invalid state")
       }
     }
   }

@@ -1,6 +1,6 @@
-package org.danielholmes.gaeq
+package org.danielholmes.gaeq.genes
 
-trait OperationGene extends Gene {
+trait OperatorGene extends Gene {
   val left: Gene
   val right: Gene
   val sign: String

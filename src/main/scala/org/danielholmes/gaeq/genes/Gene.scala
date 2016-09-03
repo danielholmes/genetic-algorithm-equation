@@ -1,4 +1,4 @@
-package org.danielholmes.gaeq
+package org.danielholmes.gaeq.genes
 
 trait Gene {
   val toDouble: Double

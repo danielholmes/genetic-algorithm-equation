@@ -24,7 +24,7 @@ Individual continuous: `sbt ~"test-only org.danielholmes.gaeq.GeneEncoderSpec"`
 
 ## Running
 
-`sbt 'run-main org.danielholmes.gaeq.Run 42'` 
+`sbt run` 
 
 
 ## Encoding
