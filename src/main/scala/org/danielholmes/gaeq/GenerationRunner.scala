@@ -1,7 +1,5 @@
 package org.danielholmes.gaeq
 
-import org.danielholmes.gaeq.genes.Gene
-
 import scala.annotation.tailrec
 import scala.util.Random
 
@@ -24,7 +22,7 @@ class GenerationRunner(encoder: GeneEncoder, crossoverRate: Double, mutationRate
   }
 
   private def createChild(chromosomes: Traversable[ChromosomeResult]): Chromosome = {
-    val parents = findParents(chromosomes)
+    val parents = findParents(chromosomes.toSeq)
     mutate(crossover(parents._1, parents._2))
   }
 
@@ -56,24 +54,42 @@ class GenerationRunner(encoder: GeneEncoder, crossoverRate: Double, mutationRate
     ).get
   }
 
-  // Chance of being selected is proportional to fitness
-  // TODO: Enforce that parents can't be the same individual (should still be possible to be equal though)
-  private def findParents(chromosomes: Traversable[ChromosomeResult]): (Chromosome, Chromosome) = {
-    (findParent(chromosomes), findParent(chromosomes))
-  }
-
-  private def findParent(chromosomes: Traversable[ChromosomeResult]): Chromosome = {
-    val totalFitness = chromosomes.map(_.fitness).sum
-    findParent(0, chromosomes, randomGenerator.nextDouble() * totalFitness)
+  private def findParents(chromosomes: Seq[ChromosomeResult]): (Chromosome, Chromosome) = {
+    val index1 = findParentIndex(chromosomes)
+    val index2 = findParentIndex(chromosomes, index1)
+    (chromosomes(index1).chromosome, chromosomes(index2).chromosome)
   }
 
   @tailrec
-  private def findParent(currentScore: Double, results: Traversable[ChromosomeResult], target: Double): Chromosome = {
-    val newScore = results.head.fitness + currentScore
-    if (newScore >= target) {
-      results.head.chromosome
+  private def findParentIndex(chromosomes: Traversable[ChromosomeResult], except: Int): Int = {
+    val test = findParentIndex(chromosomes)
+    if (test != except) {
+      test
     } else {
-      findParent(newScore, results.tail, target)
+      findParentIndex(chromosomes, except)
+    }
+  }
+
+  private def findParentIndex(chromosomes: Traversable[ChromosomeResult]): Int = {
+    val totalFitness = chromosomes.map(_.fitness).sum
+    if (totalFitness == Double.PositiveInfinity) {
+      randomGenerator.nextInt(chromosomes.size)
+    } else {
+      findParentIndex(0, 0, chromosomes, randomGenerator.nextDouble() * totalFitness)
+    }
+  }
+
+  @tailrec
+  private def findParentIndex(currentIndex: Int, currentScore: Double, results: Traversable[ChromosomeResult], target: Double): Int = {
+    if (results.isEmpty) {
+      currentIndex
+    } else {
+      val newScore = results.head.fitness + currentScore
+      if (newScore >= target) {
+        currentIndex
+      } else {
+        findParentIndex(currentIndex + 1, newScore, results.tail, target)
+      }
     }
   }
 

@@ -33,7 +33,7 @@ object Run extends App {
   val target = readPosInt("Enter a target", 1 + new Random().nextInt(99))
   val populationSize = readPosInt("Population size", 35)
   val numberOfGenerations = readPosInt("Number of generations", 100)
-  val chromosomeSize = readPosInt("Chromosome size", 8)
+  val chromosomeSize = readPosInt("Chromosome size", 9)
 
   val crossoverRate = 0.7
   val mutationRate = 0.001
@@ -46,15 +46,17 @@ object Run extends App {
   // Not sure how to do this functionally
   var currentPopulation = population
   for (i <- 1 to numberOfGenerations) {
-    println(s"Generation $i")
+    println(s"$i) " + ("-" * 80))
     val result = runner.run(currentPopulation, target)
 
     // println(result.populationResults.map(r => r.chromosome.toBinaryString +
     // " " + r.chromosome.toString + " || " + r.chromosome.toValidSequenceString).mkString("\n"))
-    println(s"Average fitness:  ${result.averageFitness}")
-    println(s"Fittest equation: ${result.fittestResult.chromosome.toValidSequenceString}")
-    println(s"Fittest value:    ${result.fittestResult.chromosome.toDouble}")
-    println(s"Fittest fitness:  ${result.fittestResult.fitness}")
+    println(s"Distinct chromosomes: ${result.distinctChromosomes}")
+    println(s"Average fitness: ${result.averageFitness}")
+    println(s"Fittest:")
+    println(s"  Equation: ${result.fittestResult.chromosome.toValidSequenceString}")
+    println(s"  Value:    ${result.fittestResult.chromosome.toDouble}")
+    println(s"  Fitness:  ${result.fittestResult.fitness}")
 
     currentPopulation = result.newPopulation
 

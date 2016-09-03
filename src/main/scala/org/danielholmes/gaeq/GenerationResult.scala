@@ -5,4 +5,5 @@ case class GenerationResult(populationResults: Traversable[ChromosomeResult], ne
 
   lazy val averageFitness = populationResults.map(_.fitness).sum / populationResults.size
   lazy val fittestResult = populationResults.maxBy(_.fitness)
+  lazy val distinctChromosomes = populationResults.map(_.chromosome).toSet.size
 }
