@@ -17,7 +17,7 @@ To find available SBT dependency updates run `sbt dependencyUpdates`
 
 ## Tests
 
-All: sbt test
+All: `sbt test`
 Individual: `sbt "test-only org.danielholmes.gaeq.GeneEncoderSpec"`
 Individual continuous: `sbt ~"test-only org.danielholmes.gaeq.GeneEncoderSpec"`
 
