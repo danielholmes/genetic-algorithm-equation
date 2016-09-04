@@ -17,14 +17,14 @@ To find available SBT dependency updates run `sbt dependencyUpdates`
 
 ## Tests
 
-All: `sbt test`
-Individual: `sbt "test-only org.danielholmes.gaeq.GeneEncoderSpec"`
-Individual continuous: `sbt ~"test-only org.danielholmes.gaeq.GeneEncoderSpec"`
+ - All: `sbt test`
+ - Individual: `sbt "test-only org.danielholmes.gaeq.GeneEncoderSpec"`
+ - Individual continuous: `sbt ~"test-only org.danielholmes.gaeq.GeneEncoderSpec"`
 
 
 ## Running
 
-`sbt run` 
+`sbt 'run-main org.danielholmes.gaeq.RunNums'` 
 
 
 ## Encoding

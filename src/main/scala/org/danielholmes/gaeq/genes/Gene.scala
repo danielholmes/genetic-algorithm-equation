@@ -2,9 +2,8 @@ package org.danielholmes.gaeq.genes
 
 trait Gene {
   val toBinaryString: String
-
-  //require(toBinaryString.length == Gene.BINARY_REPRESENTATION_SIZE)
-  //require(toBinaryString.forall(Set('1', '0').contains))
+  // TODO: Use this, more efficient than using strings/chars
+  // val toByteSeq: Seq[Byte]
 }
 
 object Gene {

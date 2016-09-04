@@ -2,8 +2,6 @@ package org.danielholmes.gaeq
 
 import org.danielholmes.gaeq.genes._
 
-import scala.annotation.tailrec
-
 // Order of operations is just left to right
 // Ignores invalid genes
 class GeneEncoder {

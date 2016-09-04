@@ -55,40 +55,31 @@ class GenerationRunner(encoder: GeneEncoder, crossoverRate: Double, mutationRate
   }
 
   private def findParents(chromosomes: Seq[ChromosomeResult]): (Chromosome, Chromosome) = {
-    val index1 = findParentIndex(chromosomes)
-    val index2 = findParentIndex(chromosomes, index1)
-    (chromosomes(index1).chromosome, chromosomes(index2).chromosome)
+    val parent1 = findParent(chromosomes)
+    val parent2 = findParent(chromosomes.diff(List(parent1)))
+    (parent1.chromosome, parent2.chromosome)
   }
 
-  @tailrec
-  private def findParentIndex(chromosomes: Traversable[ChromosomeResult], except: Int): Int = {
-    val test = findParentIndex(chromosomes)
-    if (test != except) {
-      test
-    } else {
-      findParentIndex(chromosomes, except)
-    }
-  }
-
-  private def findParentIndex(chromosomes: Traversable[ChromosomeResult]): Int = {
+  private def findParent(chromosomes: Seq[ChromosomeResult]): ChromosomeResult = {
     val totalFitness = chromosomes.map(_.fitness).sum
     if (totalFitness == Double.PositiveInfinity) {
-      randomGenerator.nextInt(chromosomes.size)
+      val infinities = chromosomes.filter(_.fitness == Double.PositiveInfinity)
+      chromosomes(randomGenerator.nextInt(infinities.size))
     } else {
-      findParentIndex(0, 0, chromosomes, randomGenerator.nextDouble() * totalFitness)
+      findParent(0, chromosomes, randomGenerator.nextDouble() * totalFitness)
     }
   }
 
   @tailrec
-  private def findParentIndex(currentIndex: Int, currentScore: Double, results: Traversable[ChromosomeResult], target: Double): Int = {
+  private def findParent(currentScore: Double, results: Traversable[ChromosomeResult], target: Double): ChromosomeResult = {
     if (results.isEmpty) {
-      currentIndex
+      results.last
     } else {
       val newScore = results.head.fitness + currentScore
       if (newScore >= target) {
-        currentIndex
+        results.head
       } else {
-        findParentIndex(currentIndex + 1, newScore, results.tail, target)
+        findParent(newScore, results.tail, target)
       }
     }
   }

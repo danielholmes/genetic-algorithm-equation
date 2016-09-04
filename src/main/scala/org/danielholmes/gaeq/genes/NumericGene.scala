@@ -3,7 +3,7 @@ package org.danielholmes.gaeq.genes
 case class NumericGene(value: Int) extends Gene {
   require(NumericGene.ALL_INTS.contains(value))
 
-  val toBinaryString: String = s"%0${Gene.BINARY_REPRESENTATION_SIZE}d".format(value.toBinaryString.toInt)
+  lazy val toBinaryString: String = s"%0${Gene.BINARY_REPRESENTATION_SIZE}d".format(value.toBinaryString.toInt)
   override lazy val toString: String = value.toString
 }
 
