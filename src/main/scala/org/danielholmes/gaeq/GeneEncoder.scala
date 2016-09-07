@@ -8,23 +8,24 @@ class GeneEncoder {
   def decode(raw: String): Option[Chromosome] = {
     Some(raw)
       .filter(_.nonEmpty)
-      .filter(_.length % Gene.BINARY_REPRESENTATION_SIZE == 0)
-      .map(_.grouped(Gene.BINARY_REPRESENTATION_SIZE).toSeq)
+      .map(_.map(c => c == '1'))
+      .filter(_.size % Gene.BIT_SIZE == 0)
+      .map(_.grouped(Gene.BIT_SIZE).toSeq)
       .filter(_.nonEmpty)
       .map(decode)
   }
 
-  private def decode(tokens: Seq[String]): Chromosome = {
+  private def decode(tokens: Seq[Seq[Boolean]]): Chromosome = {
     Chromosome(tokens.map(decodeToken))
   }
 
-  private def decodeToken(token: String): Gene = {
+  private def decodeToken(token: Seq[Boolean]): Gene = {
     token match {
-      case Plus.BINARY_REPRESENTATION => Plus()
-      case Subtract.BINARY_REPRESENTATION => Subtract()
-      case Multiply.BINARY_REPRESENTATION => Multiply()
-      case Divide.BINARY_REPRESENTATION => Divide()
-      case _ => NumericGene.fromBinaryRepresentation(token).getOrElse(InvalidGene(token))
+      case Plus.BOOLEAN_SEQ_REPRESENTATION => Plus()
+      case Subtract.BOOLEAN_SEQ_REPRESENTATION => Subtract()
+      case Multiply.BOOLEAN_SEQ_REPRESENTATION => Multiply()
+      case Divide.BOOLEAN_SEQ_REPRESENTATION => Divide()
+      case _ => NumericGene.fromBooleanSeq(token).getOrElse(InvalidGene(token))
     }
   }
 }

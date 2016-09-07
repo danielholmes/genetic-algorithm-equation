@@ -24,7 +24,7 @@ To find available SBT dependency updates run `sbt dependencyUpdates`
 
 ## Running
 
-`sbt 'run-main org.danielholmes.gaeq.RunNums'` 
+`sbt 'run-main org.danielholmes.gaeq.Run'` 
 
 
 ## Encoding

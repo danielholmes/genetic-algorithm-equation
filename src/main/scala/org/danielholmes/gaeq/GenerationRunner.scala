@@ -10,51 +10,52 @@ class GenerationRunner(encoder: GeneEncoder, crossoverRate: Double, mutationRate
 
   def run(population: Traversable[Chromosome], target: Int): GenerationResult = {
     val results = population.map(p => getResult(p, target))
-    GenerationResult(results, reproduce(results))
+    GenerationResult(results, reproduce(Seq.empty, results))
   }
 
-  private def reproduce(chromosomes: Traversable[ChromosomeResult]): Traversable[Chromosome] = {
+  @tailrec
+  private def reproduce(current: Seq[Chromosome], chromosomes: Traversable[ChromosomeResult]): Traversable[Chromosome] = {
     if (chromosomes.size < 2) {
       Traversable.empty
+    } else if (current.size == chromosomes.size) {
+      current
     } else {
-      Range(0, chromosomes.size).map(_ => createChild(chromosomes))
+      reproduce(current ++ createChild(chromosomes), chromosomes)
     }
   }
 
-  private def createChild(chromosomes: Traversable[ChromosomeResult]): Chromosome = {
-    val parents = findParents(chromosomes.toSeq)
-    mutate(crossover(parents._1, parents._2))
+  private def createChild(chromosomes: Traversable[ChromosomeResult]): Option[Chromosome] = {
+    val parents = pickParentsBasedOnFitness(chromosomes.toSeq)
+    crossover(parents._1, parents._2).map(mutate)
   }
 
-  // Dependent on the crossover rate crossover the bits from each chosen chromosome at a randomly chosen point.
-  private def crossover(parent1: Chromosome, parent2: Chromosome): Chromosome = {
-    if (randomGenerator.nextDouble() > crossoverRate) {
-      parent1
-    } else {
-      val crossoverIndex = randomGenerator.nextInt(parent1.genes.size)
-      Chromosome(parent1.genes.slice(0, crossoverIndex) ++ parent2.genes.slice(crossoverIndex, parent2.genes.size))
-    }
+  // Crossover doesn't happen every opportunity
+  private def crossover(parent1: Chromosome, parent2: Chromosome): Option[Chromosome] = {
+    Some(randomGenerator.nextDouble())
+        .filter(_ <= crossoverRate)
+        .map(r => {
+          val crossoverIndex = randomGenerator.nextInt(parent1.genes.size)
+          Chromosome(parent1.genes.slice(0, crossoverIndex) ++ parent2.genes.slice(crossoverIndex, parent2.genes.size))
+        })
   }
 
   // Step through the chosen chromosomes bits and flip dependent on the mutation rate.
   private def mutate(chromosome: Chromosome): Chromosome = {
     encoder.decode(
-      chromosome.toBinaryString
+      chromosome.toBooleanSeq
         .map(c => {
-          if (randomGenerator.nextDouble() < mutationRate) {
-            c match {
-              case '0' => '1'
-              case '1' => '0'
-            }
+          if (randomGenerator.nextDouble() <= mutationRate) {
+            !c
           } else {
             c
           }
         })
+        .map(if (_) '1' else '0')
         .mkString
     ).get
   }
 
-  private def findParents(chromosomes: Seq[ChromosomeResult]): (Chromosome, Chromosome) = {
+  private def pickParentsBasedOnFitness(chromosomes: Seq[ChromosomeResult]): (Chromosome, Chromosome) = {
     val parent1 = findParent(chromosomes)
     val parent2 = findParent(chromosomes.diff(List(parent1)))
     (parent1.chromosome, parent2.chromosome)
@@ -72,15 +73,12 @@ class GenerationRunner(encoder: GeneEncoder, crossoverRate: Double, mutationRate
 
   @tailrec
   private def findParent(currentScore: Double, results: Traversable[ChromosomeResult], target: Double): ChromosomeResult = {
-    if (results.isEmpty) {
-      results.last
+    val newScore = results.head.fitness + currentScore
+    // TODO: Shouldn't need this if results.size == 1 I don't think
+    if (newScore >= target || results.size == 1) {
+      results.head
     } else {
-      val newScore = results.head.fitness + currentScore
-      if (newScore >= target) {
-        results.head
-      } else {
-        findParent(newScore, results.tail, target)
-      }
+      findParent(newScore, results.tail, target)
     }
   }
 

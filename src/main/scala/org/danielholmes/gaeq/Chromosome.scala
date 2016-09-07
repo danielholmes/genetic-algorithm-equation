@@ -11,7 +11,7 @@ case class Chromosome(genes: Seq[Gene]) {
     normaliseWithNumberToken(Seq.empty, genes)
   }
 
-  lazy val toBinaryString = genes.map(_.toBinaryString).mkString
+  lazy val toBooleanSeq = genes.flatMap(_.toBooleanSeq)
 
   lazy val toValidSequenceString = validSequence.map(_.toString).mkString(" ")
 

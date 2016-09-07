@@ -1,5 +1,6 @@
 package org.danielholmes.gaeq
 
+import scala.annotation.tailrec
 import scala.io.StdIn
 import scala.util.Random
 
@@ -36,31 +37,36 @@ object Run extends App {
   val chromosomeSize = readPosInt("Chromosome size", 9)
 
   val crossoverRate = 0.7
-  val mutationRate = 0.001
+  val mutationRate = 0.003
 
   val encoder = new GeneEncoder
   val runner = new GenerationRunner(encoder, crossoverRate, mutationRate)
   val popFactory = new PopulationFactory(encoder, chromosomeSize)
   val population = popFactory.create(populationSize)
 
-  // Not sure how to do this functionally
-  var currentPopulation = population
-  for (i <- 1 to numberOfGenerations) {
-    println(s"$i) " + ("-" * 80))
-    val result = runner.run(currentPopulation, target)
+  @tailrec
+  def runGeneration(current: Int, total: Int, population: Traversable[Chromosome]): Unit = {
+    if (current > total) {
+      println("Done")
+    } else {
+      println(s"$current) " + ("-" * 80))
+      val result = runner.run(population, target)
 
-    // println(result.populationResults.map(r => r.chromosome.toBinaryString +
-    // " " + r.chromosome.toString + " || " + r.chromosome.toValidSequenceString).mkString("\n"))
-    println(s"Distinct chromosomes: ${result.distinctChromosomes}")
-    println(s"Average fitness: ${result.averageFitness}")
-    println(s"Fittest:")
-    println(s"  Equation: ${result.fittestResult.chromosome.toValidSequenceString}")
-    println(s"  Value:    ${result.fittestResult.chromosome.toDouble}")
-    println(s"  Fitness:  ${result.fittestResult.fitness}")
+      // println(result.populationResults.map(r => r.chromosome.toBinaryString +
+      // " " + r.chromosome.toString + " || " + r.chromosome.toValidSequenceString).mkString("\n"))
+      println(s"Distinct chromosomes: ${result.distinctChromosomes}")
+      println(s"Average fitness: ${result.averageFitness}")
+      println(s"Fittest:")
+      println(s"  Equation: ${result.fittestResult.chromosome.toValidSequenceString}")
+      println(s"  Value:    ${result.fittestResult.chromosome.toDouble}")
+      println(s"  Fitness:  ${result.fittestResult.fitness}")
 
-    currentPopulation = result.newPopulation
+      print("Continue?")
+      StdIn.readLine()
 
-    print("Continue?")
-    StdIn.readLine()
+      runGeneration(current + 1, total, result.newPopulation)
+    }
   }
+
+  runGeneration(1, numberOfGenerations, population)
 }

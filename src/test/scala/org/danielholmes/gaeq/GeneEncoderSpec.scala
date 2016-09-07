@@ -33,7 +33,7 @@ class GeneEncoderSpec extends FlatSpec with Matchers {
   it should "ignore invalid tokens as per tutorial example" in {
     // 0 2 + n/a
     // 0 + 7
-    encoder.decode("0000001010101110") should contain (Chromosome(Seq(NumericGene(0), NumericGene(2), Plus(), InvalidGene("1110"))))
+    encoder.decode("0000001010101110") should contain (Chromosome(Seq(NumericGene(0), NumericGene(2), Plus(), InvalidGene(Seq(true, true, true, false)))))
   }
 
   it should "include second number when invalid sequence of 2 numbers" in {
