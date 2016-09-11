@@ -20,23 +20,22 @@ class GenerationRunner(encoder: GeneEncoder, crossoverRate: Double, mutationRate
     } else if (current.size == chromosomes.size) {
       current
     } else {
-      reproduce(current ++ createChild(chromosomes), chromosomes)
+      reproduce(current :+ createChild(chromosomes), chromosomes)
     }
   }
 
-  private def createChild(chromosomes: Traversable[ChromosomeResult]): Option[Chromosome] = {
+  private def createChild(chromosomes: Traversable[ChromosomeResult]): Chromosome = {
     val parents = pickParentsBasedOnFitness(chromosomes.toSeq)
-    crossover(parents._1, parents._2).map(mutate)
+    mutate(crossover(parents._1, parents._2))
   }
 
-  // Crossover doesn't happen every opportunity
-  private def crossover(parent1: Chromosome, parent2: Chromosome): Option[Chromosome] = {
-    Some(randomGenerator.nextDouble())
-        .filter(_ <= crossoverRate)
-        .map(r => {
-          val crossoverIndex = randomGenerator.nextInt(parent1.genes.size)
-          Chromosome(parent1.genes.slice(0, crossoverIndex) ++ parent2.genes.slice(crossoverIndex, parent2.genes.size))
-        })
+  private def crossover(parent1: Chromosome, parent2: Chromosome): Chromosome = {
+    if (randomGenerator.nextDouble() <= crossoverRate) {
+      val crossoverIndex = randomGenerator.nextInt(parent1.genes.size)
+      Chromosome(parent1.genes.slice(0, crossoverIndex) ++ parent2.genes.slice(crossoverIndex, parent2.genes.size))
+    } else {
+      parent1
+    }
   }
 
   // Step through the chosen chromosomes bits and flip dependent on the mutation rate.
@@ -57,7 +56,9 @@ class GenerationRunner(encoder: GeneEncoder, crossoverRate: Double, mutationRate
 
   private def pickParentsBasedOnFitness(chromosomes: Seq[ChromosomeResult]): (Chromosome, Chromosome) = {
     val parent1 = findParent(chromosomes)
-    val parent2 = findParent(chromosomes.diff(List(parent1)))
+    val newFrom = chromosomes.diff(List(parent1))
+    assert(newFrom.size == chromosomes.size - 1)
+    val parent2 = findParent(newFrom)
     (parent1.chromosome, parent2.chromosome)
   }
 
